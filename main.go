@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"go/format"
 	"io"
 	"io/ioutil"
@@ -12,14 +11,13 @@ import (
 )
 
 func die(info string) {
-	fmt.Fprintln(os.Stderr, info)
+	io.WriteString(os.Stderr, info+"\n")
 	os.Exit(1)
 }
 
 func checkErr(err error) {
 	if err != nil {
-		fmt.Fprintln(os.Stderr, err)
-		os.Exit(1)
+		die(err.Error())
 	}
 }
 
@@ -38,6 +36,24 @@ func openW(name string) *os.File {
 func writeStr(w io.Writer, s string) {
 	_, err := io.WriteString(w, s)
 	checkErr(err)
+}
+
+func readAddr(addr *os.File) (uint64, uint64) {
+	buf := make([]byte, 24)
+	_, err := io.ReadFull(addr, buf)
+	checkErr(err)
+	dot := strings.Fields(string(buf))
+	if len(dot) != 2 {
+		die("bad dot address")
+	}
+
+	a, err := strconv.ParseUint(dot[0], 0, 64)
+	checkErr(err)
+	b, err := strconv.ParseUint(dot[1], 0, 64)
+	checkErr(err)
+
+	return a, b
+
 }
 
 func main() {
@@ -64,27 +80,12 @@ func main() {
 	defer data.Close()
 
 	writeStr(ctl, "mark\nnomark\naddr=dot\n")
-
-	buf := make([]byte, 24)
-	_, err = io.ReadFull(addr, buf)
-	checkErr(err)
-	dot := strings.Fields(string(buf))
-	if len(dot) != 2 {
-		die("bad dot address")
-	}
-
-	dotA, err := strconv.ParseUint(dot[0], 0, 64)
-	checkErr(err)
-	dotB, err := strconv.ParseUint(dot[1], 0, 64)
-	checkErr(err)
-
+	dotA, dotB := readAddr(addr)
 	writeStr(addr, ",")
 
 	_, err = data.Write(body)
 	checkErr(err)
 
-	_, err = fmt.Fprintf(addr, "#%d", (dotA+dotB)/2)
-	checkErr(err)
-
+	writeStr(addr, "#"+strconv.FormatUint((dotA+dotB)/2, 10))
 	writeStr(ctl, "dot=addr\nshow\nmark\n")
 }
