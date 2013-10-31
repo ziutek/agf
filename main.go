@@ -44,7 +44,7 @@ func readAddr(addr *os.File) (uint64, uint64) {
 	checkErr(err)
 	dot := strings.Fields(string(buf))
 	if len(dot) != 2 {
-		die("bad dot address")
+		die("can't read addr")
 	}
 
 	a, err := strconv.ParseUint(dot[0], 0, 64)
@@ -53,7 +53,6 @@ func readAddr(addr *os.File) (uint64, uint64) {
 	checkErr(err)
 
 	return a, b
-
 }
 
 func main() {
@@ -61,7 +60,7 @@ func main() {
 	if winid == "" {
 		die("$winid not defined")
 	}
-	mnt := os.Getenv("acme_mnt")
+	mnt := os.Getenv("acmefs")
 	if mnt == "" {
 		mnt = "/mnt/acme"
 	}
