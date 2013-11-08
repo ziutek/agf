@@ -1,13 +1,11 @@
 package main
 
 import (
+	"code.google.com/p/goplan9/plan9/acme"
 	"go/format"
 	"io"
-	"io/ioutil"
 	"os"
-	"path/filepath"
 	"strconv"
-	"strings"
 )
 
 func die(info string) {
@@ -21,70 +19,35 @@ func checkErr(err error) {
 	}
 }
 
-func openRW(name string) *os.File {
-	f, err := os.OpenFile(name, os.O_RDWR, 0)
-	checkErr(err)
-	return f
-}
-
-func openW(name string) *os.File {
-	f, err := os.OpenFile(name, os.O_WRONLY, 0)
-	checkErr(err)
-	return f
-}
-
-func writeStr(w io.Writer, s string) {
-	_, err := io.WriteString(w, s)
-	checkErr(err)
-}
-
-func readAddr(addr *os.File) (uint64, uint64) {
-	buf := make([]byte, 24)
-	_, err := io.ReadFull(addr, buf)
-	checkErr(err)
-	dot := strings.Fields(string(buf))
-	if len(dot) != 2 {
-		die("can't read addr")
-	}
-
-	a, err := strconv.ParseUint(dot[0], 0, 64)
-	checkErr(err)
-	b, err := strconv.ParseUint(dot[1], 0, 64)
-	checkErr(err)
-
-	return a, b
-}
-
 func main() {
 	winid := os.Getenv("winid")
 	if winid == "" {
 		die("$winid not defined")
 	}
-	mnt := os.Getenv("acmefs")
-	if mnt == "" {
-		mnt = "/mnt/acme"
-	}
-	checkErr(os.Chdir(filepath.Join(mnt, winid)))
+	id, err := strconv.ParseUint(winid, 10, 0)
+	checkErr(err)
 
-	body, err := ioutil.ReadFile("body")
+	win, err := acme.Open(int(id), nil)
+	checkErr(err)
+
+	body, err := win.ReadAll("body")
 	checkErr(err)
 	body, err = format.Source(body)
 	checkErr(err)
 
-	ctl := openW("ctl")
-	defer ctl.Close()
-	addr := openRW("addr")
-	defer addr.Close()
-	data := openW("data")
-	defer data.Close()
-
-	writeStr(ctl, "mark\nnomark\naddr=dot\n")
-	dotA, dotB := readAddr(addr)
-	writeStr(addr, ",")
-
-	_, err = data.Write(body)
+	// Read current dot addr
+	_, _, err = win.ReadAddr() // only for open 'addr' file before write to 'ctl'
 	checkErr(err)
-
-	writeStr(addr, "#"+strconv.FormatUint((dotA+dotB)/2, 10))
-	writeStr(ctl, "dot=addr\nshow\nmark\n")
+	checkErr(win.Ctl("mark\nnomark\naddr=dot\n"))
+	dotA, dotB, err := win.ReadAddr()
+	checkErr(err)
+	
+	// Replace body
+	checkErr(win.Addr(","))
+	_, err = win.Write("data", body)
+	checkErr(err)
+	
+	// Set cursor position near previous dot
+	checkErr(win.Addr("#%d", (dotA+dotB)/2))
+	checkErr(win.Ctl("dot=addr\nshow\nmark\n"))
 }
