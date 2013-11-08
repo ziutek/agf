@@ -30,6 +30,7 @@ func main() {
 	win, err := acme.Open(int(id), nil)
 	checkErr(err)
 
+	// Read and format body
 	body, err := win.ReadAll("body")
 	checkErr(err)
 	body, err = format.Source(body)
@@ -41,12 +42,12 @@ func main() {
 	checkErr(win.Ctl("mark\nnomark\naddr=dot\n"))
 	dotA, dotB, err := win.ReadAddr()
 	checkErr(err)
-	
+
 	// Replace body
 	checkErr(win.Addr(","))
 	_, err = win.Write("data", body)
 	checkErr(err)
-	
+
 	// Set cursor position near previous dot
 	checkErr(win.Addr("#%d", (dotA+dotB)/2))
 	checkErr(win.Ctl("dot=addr\nshow\nmark\n"))
