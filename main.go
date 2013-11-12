@@ -92,6 +92,7 @@ func indent(body []byte) ([]byte, error) {
 		"--blank-lines-after-declarations",
 		"--blank-lines-after-procedures",
 		"--dont-line-up-parentheses",
+		"--no-space-after-function-call-names",
 		"--indent-level4",
 		"--use-tabs",
 		"--tab-size4",
