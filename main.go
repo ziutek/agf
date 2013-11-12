@@ -91,7 +91,6 @@ func indent(body []byte) ([]byte, error) {
 		"--braces-on-struct-decl-line",
 		"--blank-lines-after-declarations",
 		"--blank-lines-after-procedures",
-		"--blank-lines-after-commas",
 		"--dont-line-up-parentheses",
 		"--indent-level4",
 		"--use-tabs",
