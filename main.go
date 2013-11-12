@@ -1,11 +1,16 @@
 package main
 
 import (
+	"bytes"
 	"code.google.com/p/goplan9/plan9/acme"
+	"errors"
 	"go/format"
 	"io"
 	"os"
+	"os/exec"
+	"path/filepath"
 	"strconv"
+	"strings"
 )
 
 func die(info string) {
@@ -30,14 +35,28 @@ func main() {
 	win, err := acme.Open(int(id), nil)
 	checkErr(err)
 
-	// Read and format body
+	// Obtain a file type
+	tag, err := win.ReadAll("tag")
+	checkErr(err)
+	typ := ""
+	if fields := bytes.Fields(tag); len(fields) > 0 {
+		fname := filepath.Base(string(fields[0]))
+		if i := strings.LastIndex(fname, "."); i != -1 {
+			typ = fname[i+1:]
+		}
+	}
+	if typ == "" {
+		die("there is no extension in file name")
+	}
+
+	// Read and format a body
 	body, err := win.ReadAll("body")
 	checkErr(err)
-	body, err = format.Source(body)
+	body, err = formatSrc(body, typ)
 	checkErr(err)
 
 	// Read current dot addr
-	_, _, err = win.ReadAddr() // only for open 'addr' file before write to 'ctl'
+	_, _, err = win.ReadAddr() // for open 'addr' file before write to 'ctl'
 	checkErr(err)
 	checkErr(win.Ctl("mark\nnomark\naddr=dot\n"))
 	dotA, dotB, err := win.ReadAddr()
@@ -51,4 +70,40 @@ func main() {
 	// Set cursor position near previous dot
 	checkErr(win.Addr("#%d", (dotA+dotB)/2))
 	checkErr(win.Ctl("dot=addr\nshow\nmark\n"))
+}
+
+func formatSrc(body []byte, typ string) ([]byte, error) {
+	switch typ {
+	case "go":
+		return format.Source(body)
+	case "c":
+		return indent(body)
+	}
+
+	return nil, errors.New("unknown file type: " + typ)
+}
+
+func indent(body []byte) ([]byte, error) {
+	cmd := exec.Command(
+		"indent",
+		"--braces-on-if-line",
+		"--cuddle-else",
+		"--braces-on-struct-decl-line",
+		"--blank-lines-after-declarations",
+		"--blank-lines-after-procedures",
+		"--blank-lines-after-commas",
+		"--dont-line-up-parentheses",
+		"--indent-level4",
+		"--use-tabs",
+		"--tab-size4",
+	)
+	cmd.Stdin = bytes.NewBuffer(body)
+	var stdout, stderr bytes.Buffer
+	cmd.Stdout = &stdout
+	cmd.Stderr = &stderr
+	err := cmd.Run()
+	if err != nil {
+		return nil, errors.New(err.Error() + "\n" + stderr.String())
+	}
+	return stdout.Bytes(), nil
 }
