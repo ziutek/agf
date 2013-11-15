@@ -76,7 +76,7 @@ func formatSrc(body []byte, typ string) ([]byte, error) {
 	switch typ {
 	case "go":
 		return format.Source(body)
-	case "c":
+	case "c", "h":
 		return indent(body)
 	}
 
@@ -84,15 +84,19 @@ func formatSrc(body []byte, typ string) ([]byte, error) {
 }
 
 func indent(body []byte) ([]byte, error) {
+	// Generally, try format C source in Go style.
 	cmd := exec.Command(
 		"indent",
 		"--braces-on-if-line",
 		"--cuddle-else",
+		"--cuddle-do-while",
 		"--braces-on-struct-decl-line",
 		"--blank-lines-after-declarations",
 		"--blank-lines-after-procedures",
 		"--dont-line-up-parentheses",
 		"--no-space-after-function-call-names",
+		"--declaration-comment-column0",
+		"--comment-indentation0",
 		"--indent-level4",
 		"--use-tabs",
 		"--tab-size4",
