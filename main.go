@@ -76,7 +76,7 @@ func formatSrc(body []byte, typ string) ([]byte, error) {
 	switch typ {
 	case "go":
 		return format.Source(body)
-	case "c", "h":
+	case "c", "cc", "cpp", "cxx", "h":
 		return indent(body)
 	}
 
@@ -91,10 +91,13 @@ func indent(body []byte) ([]byte, error) {
 		"--cuddle-else",
 		"--cuddle-do-while",
 		"--braces-on-struct-decl-line",
+		"--braces-on-func-def-line",
+		"--dont-break-procedure-type",
 		"--blank-lines-after-declarations",
 		"--blank-lines-after-procedures",
 		"--dont-line-up-parentheses",
 		"--no-space-after-function-call-names",
+		"--no-space-after-casts",
 		"--declaration-comment-column0",
 		"--comment-indentation0",
 		"--indent-level4",
