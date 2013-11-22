@@ -93,7 +93,7 @@ func indent(body []byte) ([]byte, error) {
 		"--braces-on-struct-decl-line",
 		//"--braces-on-func-def-line",
 		//"--dont-break-procedure-type",
-		"--blank-lines-after-declarations",
+		//"--blank-lines-after-declarations",
 		"--blank-lines-after-procedures",
 		"--dont-line-up-parentheses",
 		"--no-space-after-function-call-names",
