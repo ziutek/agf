@@ -91,8 +91,8 @@ func indent(body []byte) ([]byte, error) {
 		"--cuddle-else",
 		"--cuddle-do-while",
 		"--braces-on-struct-decl-line",
-		//"--braces-on-func-def-line",
-		//"--dont-break-procedure-type",
+		"--braces-on-func-def-line",
+		"--dont-break-procedure-type",
 		//"--blank-lines-after-declarations",
 		"--blank-lines-after-procedures",
 		"--dont-line-up-parentheses",
@@ -103,6 +103,7 @@ func indent(body []byte) ([]byte, error) {
 		"--indent-level4",
 		"--use-tabs",
 		"--tab-size4",
+		"--honour-newlines",
 	)
 	cmd.Stdin = bytes.NewBuffer(body)
 	var stdout, stderr bytes.Buffer
