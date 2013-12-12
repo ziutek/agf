@@ -76,7 +76,7 @@ func formatSrc(body []byte, typ string) ([]byte, error) {
 	switch typ {
 	case "go":
 		return format.Source(body)
-	case "c", "cc", "cpp", "cxx", "h":
+	case "c", "cc", "cpp", "cxx", "h", "hh":
 		return indent(body)
 	}
 
