@@ -24,6 +24,13 @@ func checkErr(err error) {
 	}
 }
 
+func checkFormatErr(path string, err error) {
+	if err != nil {
+		io.WriteString(os.Stderr, path+":")
+		die(err.Error())
+	}
+}
+
 func main() {
 	winid := os.Getenv("winid")
 	if winid == "" {
@@ -39,8 +46,10 @@ func main() {
 	tag, err := win.ReadAll("tag")
 	checkErr(err)
 	typ := ""
+	fpath := ""
 	if fields := bytes.Fields(tag); len(fields) > 0 {
-		fname := filepath.Base(string(fields[0]))
+		fpath = string(fields[0])
+		fname := filepath.Base(fpath)
 		if i := strings.LastIndex(fname, "."); i != -1 {
 			typ = fname[i+1:]
 		}
@@ -53,7 +62,7 @@ func main() {
 	body, err := win.ReadAll("body")
 	checkErr(err)
 	body, err = formatSrc(body, typ)
-	checkErr(err)
+	checkFormatErr(fpath, err)
 
 	// Read current dot addr
 	_, _, err = win.ReadAddr() // for open 'addr' file before write to 'ctl'
