@@ -27,7 +27,7 @@ func checkErr(err error) {
 func checkFormatErr(path string, err error) {
 	if err != nil {
 		io.WriteString(os.Stdout, path+":"+err.Error())
-		os.Exit(1)
+		os.Exit(2)
 	}
 }
 
