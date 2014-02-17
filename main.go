@@ -85,8 +85,12 @@ func formatSrc(body []byte, typ string) ([]byte, error) {
 	switch typ {
 	case "go":
 		return format.Source(body)
+		
 	case "c", "cc", "cpp", "cxx", "h", "hh":
 		return indent(body)
+		
+	case "s", "S":
+		return formatAsm(body)
 	}
 
 	return nil, errors.New("unknown file type: " + typ)
