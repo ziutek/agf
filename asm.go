@@ -40,7 +40,7 @@ func formatAsm(in []byte) ([]byte, error) {
 
 		var comment []byte
 		if n := bytes.Index(line, []byte("//")); n != -1 {
-			comment = line[n:]
+			comment = bytes.TrimSpace(line[n+2:])
 			line = line[:n]
 		}
 
@@ -50,18 +50,26 @@ func formatAsm(in []byte) ([]byte, error) {
 			if f[0] == '.' && !lspace || len(fields) == 1 && f[len(f)-1] == ':' {
 				// directives at line begin and alone labels
 				writeEsc(w)
-				for _, f := range fields {
+				for i, f := range fields {
 					w.Write(f)
-					writeSpc(w)
+					if i < len(fields)-1 {
+						writeSpc(w)
+					}
 				}
 				writeEsc(w)
 			} else {
-				if f[len(f)-1] != ':' {
-					writeTab(w)
+				fields = fields[1:]
+				if f[len(f)-1] == ':' {
+					// label before instruction
+					w.Write(f)
+					f = fields[0]
+					fields = fields[1:]
 				}
+
+				writeTab(w)
 				w.Write(f)
 				writeTab(w)
-				fields = fields[1:]
+
 				for i, f := range fields {
 					if f[0] == ',' {
 						w.WriteByte(',')
@@ -76,15 +84,16 @@ func formatAsm(in []byte) ([]byte, error) {
 						writeSpc(w)
 					}
 				}
-				writeTab(w)
+
 			}
 		}
 
 		if comment != nil {
-			if len(fields) == 0 && lspace {
+			if len(fields) == 0 && lspace || len(fields) > 0 {
 				writeTab(w)
 			}
 			writeEsc(w)
+			w.WriteString("// ")
 			w.Write(comment)
 			writeEsc(w)
 		}
