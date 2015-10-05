@@ -111,6 +111,7 @@ func indent(body []byte) ([]byte, error) {
 		"--dont-line-up-parentheses",
 		"--no-space-after-function-call-names",
 		"--no-space-after-casts",
+		"--no-space-after-parentheses",
 		"--declaration-comment-column0",
 		"--comment-indentation0",
 		"--indent-level4",
