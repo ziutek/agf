@@ -105,7 +105,7 @@ func indent(body []byte) ([]byte, error) {
 		"--cuddle-do-while",
 		"--braces-on-struct-decl-line",
 		"--braces-on-func-def-line",
-		"--dont-break-procedure-type",
+		//"--dont-break-procedure-type",
 		//"--blank-lines-after-declarations",
 		"--blank-lines-after-procedures",
 		"--dont-line-up-parentheses",
