@@ -117,6 +117,8 @@ func indent(body []byte) ([]byte, error) {
 		"--indent-level4",
 		"--use-tabs",
 		"--tab-size4",
+		"--line-length80",
+		"--comment-line-length80",
 		"--honour-newlines",
 	)
 	cmd.Stdin = bytes.NewBuffer(body)
