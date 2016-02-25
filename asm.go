@@ -2,7 +2,6 @@ package main
 
 import (
 	"bytes"
-	"io"
 	"text/tabwriter"
 	"unicode"
 )
@@ -24,18 +23,9 @@ func writeEsc(w *bytes.Buffer) {
 }
 
 func formatAsm(in []byte) ([]byte, error) {
-	r := bytes.NewBuffer(in)
 	w := new(bytes.Buffer)
 
-	for {
-		line, err := r.ReadBytes('\n')
-		if err != nil {
-			if err == io.EOF {
-				break
-			}
-			return nil, err
-		}
-
+	for _, line := range bytes.Split(in, []byte{'\n'}) {
 		lspace := len(line) > 0 && unicode.IsSpace(rune(line[0]))
 
 		var comment []byte
