@@ -87,8 +87,10 @@ func formatSrc(body []byte, typ string) ([]byte, error) {
 		return format.Source(body)
 		
 	case "c", "cc", "cpp", "cxx", "h", "hh":
-		return indent(body)
-		
+		return astyle("c", body)
+		//return indent(body)
+	case "java":
+		return astyle("java", body)
 	case "s", "S":
 		return formatAsm(body)
 	}
@@ -120,6 +122,29 @@ func indent(body []byte) ([]byte, error) {
 		"--line-length80",
 		"--comment-line-length80",
 		"--honour-newlines",
+	)
+	cmd.Stdin = bytes.NewBuffer(body)
+	var stdout, stderr bytes.Buffer
+	cmd.Stdout = &stdout
+	cmd.Stderr = &stderr
+	err := cmd.Run()
+	if err != nil {
+		return nil, errors.New(err.Error() + "\n" + stderr.String())
+	}
+	return stdout.Bytes(), nil
+}
+
+func astyle(mode string, body []byte) ([]byte, error) {
+	// Generally, try format C source in Go style.
+	cmd := exec.Command(
+		"astyle",
+		"--mode="+mode,
+		"--style=java",
+		"--indent=tab",
+		"--pad-header",
+		"--add-brackets",
+		"--max-code-length=80",
+		"--break-after-logical",
 	)
 	cmd.Stdin = bytes.NewBuffer(body)
 	var stdout, stderr bytes.Buffer
