@@ -2,7 +2,6 @@ package main
 
 import (
 	"bytes"
-	"9fans.net/go/acme"
 	"errors"
 	"go/format"
 	"io"
@@ -11,6 +10,8 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+
+	"9fans.net/go/acme"
 )
 
 func die(info string) {
@@ -85,7 +86,6 @@ func formatSrc(body []byte, typ string) ([]byte, error) {
 	switch typ {
 	case "go":
 		return format.Source(body)
-		
 	case "c", "cc", "cpp", "cxx", "h", "hh":
 		return astyle("c", body)
 		//return indent(body)
