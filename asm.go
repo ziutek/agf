@@ -36,8 +36,9 @@ func formatAsm(in []byte) ([]byte, error) {
 
 		fields := bytes.Fields(line)
 		if len(fields) > 0 {
-			f := fields[0]
-			if f[0] == '.' && !lspace || len(fields) == 1 && f[len(f)-1] == ':' {
+			f := string(fields[0])
+			if f[0] == '.' && !lspace || len(fields) == 1 && f[len(f)-1] == ':' ||
+				f == "TEXT" || f == "DATA" || f == "GLOBL" || f[0] == '#' {
 				// directives at line begin and alone labels
 				writeEsc(w)
 				for i, f := range fields {
@@ -51,13 +52,13 @@ func formatAsm(in []byte) ([]byte, error) {
 				fields = fields[1:]
 				if f[len(f)-1] == ':' {
 					// label before instruction
-					w.Write(f)
-					f = fields[0]
+					w.WriteString(f)
+					f = string(fields[0])
 					fields = fields[1:]
 				}
 
 				writeTab(w)
-				w.Write(f)
+				w.WriteString(f)
 				writeTab(w)
 
 				for i, f := range fields {
