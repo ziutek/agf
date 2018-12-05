@@ -59,7 +59,7 @@ func main() {
 		fname := filepath.Base(fpath)
 		i := strings.LastIndexByte(fname, '.')
 		if i == -1 {
-			die("unsupported file type")
+			die("file name without extension")
 		}
 		typ = fname[i+1:]
 	}
