@@ -3,13 +3,15 @@ package main
 import (
 	"bytes"
 	"errors"
-	"go/format"
+
 	"io"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"strconv"
 	"strings"
+
+	"golang.org/x/tools/imports"
 
 	"9fans.net/go/acme"
 )
@@ -26,10 +28,15 @@ func checkErr(err error) {
 }
 
 func checkFormatErr(path string, err error) {
-	if err != nil {
-		io.WriteString(os.Stdout, path+":"+err.Error()+"\n")
-		os.Exit(2)
+	if err == nil {
+		return
 	}
+	s := err.Error() + "\n"
+	if !strings.HasPrefix(s, path) {
+		s = path + s
+	}
+	io.WriteString(os.Stdout, s)
+	os.Exit(2)
 }
 
 func main() {
@@ -43,7 +50,6 @@ func main() {
 	win, err := acme.Open(int(id), nil)
 	checkErr(err)
 
-	// Obtain a file type
 	tag, err := win.ReadAll("tag")
 	checkErr(err)
 	typ := ""
@@ -51,44 +57,38 @@ func main() {
 	if fields := bytes.Fields(tag); len(fields) > 0 {
 		fpath = string(fields[0])
 		fname := filepath.Base(fpath)
-		if i := strings.LastIndex(fname, "."); i != -1 {
-			typ = fname[i+1:]
+		i := strings.LastIndexByte(fname, '.')
+		if i == -1 {
+			die("unsupported file type")
 		}
-	}
-	if typ == "" {
-		die("there is no extension in file name")
+		typ = fname[i+1:]
 	}
 
-	// Read and format a body
 	body, err := win.ReadAll("body")
 	checkErr(err)
-	body, err = formatSrc(body, typ)
+	body, err = formatSrc(fpath, body, typ)
 	checkFormatErr(fpath, err)
 
-	// Read current dot addr
-	_, _, err = win.ReadAddr() // for open 'addr' file before write to 'ctl'
+	_, _, err = win.ReadAddr()
 	checkErr(err)
 	checkErr(win.Ctl("mark\nnomark\naddr=dot\n"))
-	dotA, dotB, err := win.ReadAddr()
+	dot, _, err := win.ReadAddr()
 	checkErr(err)
 
-	// Replace body
 	checkErr(win.Addr(","))
 	_, err = win.Write("data", body)
 	checkErr(err)
 
-	// Set cursor position near previous dot
-	checkErr(win.Addr("#%d", (dotA+dotB)/2))
+	checkErr(win.Addr("#%d", dot))
 	checkErr(win.Ctl("dot=addr\nshow\nmark\n"))
 }
 
-func formatSrc(body []byte, typ string) ([]byte, error) {
+func formatSrc(fpath string, body []byte, typ string) ([]byte, error) {
 	switch typ {
 	case "go":
-		return format.Source(body)
+		return imports.Process(fpath, body, &imports.Options{Comments: true, TabWidth: 4})
 	case "c", "cc", "cpp", "cxx", "h", "hh":
 		return astyle("c", body)
-		//return indent(body)
 	case "java":
 		return astyle("java", body)
 	case "s", "S":
@@ -99,7 +99,7 @@ func formatSrc(body []byte, typ string) ([]byte, error) {
 }
 
 func indent(body []byte) ([]byte, error) {
-	// Generally, try format C source in Go style.
+	// Try format C source in Go style.
 	cmd := exec.Command(
 		"indent",
 		"--braces-on-if-line",
@@ -108,7 +108,7 @@ func indent(body []byte) ([]byte, error) {
 		"--braces-on-struct-decl-line",
 		"--braces-on-func-def-line",
 		//"--dont-break-procedure-type",
-		//"--blank-lines-after-declarations",
+		//"--blank-lines-after-declarations"
 		"--blank-lines-after-procedures",
 		"--dont-line-up-parentheses",
 		"--no-space-after-function-call-names",
@@ -135,7 +135,7 @@ func indent(body []byte) ([]byte, error) {
 }
 
 func astyle(mode string, body []byte) ([]byte, error) {
-	// Generally, try format C source in Go style.
+	// Try format C source in Go style.
 	cmd := exec.Command(
 		"astyle",
 		"--mode="+mode,
