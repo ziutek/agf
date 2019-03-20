@@ -29,8 +29,8 @@ func formatAsm(in []byte) ([]byte, error) {
 		lspace := len(line) > 0 && unicode.IsSpace(rune(line[0]))
 
 		var comment []byte
-		if n := bytes.Index(line, []byte("//")); n != -1 {
-			comment = append([]byte("// "), bytes.TrimSpace(line[n+2:])...)
+		if n := bytes.IndexByte(line, '/'); n != -1 && n+1 < len(line) && (line[n+1] == '/' || line[n+1] == '*') {
+			comment = bytes.TrimRightFunc(line[n:], unicode.IsSpace)
 			line = line[:n]
 		}
 
