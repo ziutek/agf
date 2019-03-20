@@ -30,7 +30,7 @@ func formatAsm(in []byte) ([]byte, error) {
 
 		var comment []byte
 		if n := bytes.Index(line, []byte("//")); n != -1 {
-			comment = bytes.TrimSpace(line[n+2:])
+			comment = append([]byte("// "), bytes.TrimSpace(line[n+2:])...)
 			line = line[:n]
 		}
 
@@ -46,6 +46,10 @@ func formatAsm(in []byte) ([]byte, error) {
 					if i < len(fields)-1 {
 						writeSpc(w)
 					}
+				}
+				if comment != nil {
+					writeSpc(w)
+					w.Write(comment)
 				}
 				writeEsc(w)
 			} else {
@@ -75,20 +79,18 @@ func formatAsm(in []byte) ([]byte, error) {
 						writeSpc(w)
 					}
 				}
-
+				if comment != nil {
+					writeTab(w)
+					writeEsc(w)
+					w.Write(comment)
+					writeEsc(w)
+				}
 			}
-		}
-
-		if comment != nil {
-			if len(fields) == 0 && lspace || len(fields) > 0 {
-				writeTab(w)
-			}
+		} else if comment != nil {
 			writeEsc(w)
-			w.WriteString("// ")
 			w.Write(comment)
 			writeEsc(w)
 		}
-
 		writeLF(w)
 	}
 	out := new(bytes.Buffer)
