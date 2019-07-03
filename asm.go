@@ -25,13 +25,27 @@ func writeEsc(w *bytes.Buffer) {
 func formatAsm(in []byte) ([]byte, error) {
 	w := new(bytes.Buffer)
 
-	for _, line := range bytes.Split(in, []byte{'\n'}) {
+	lines := bytes.Split(in, []byte{'\n'})
+	for i := len(lines) - 1; i >= 0 && len(bytes.TrimSpace(lines[i])) == 0; i-- {
+		lines = lines[:i]
+	}
+	for _, line := range lines {
 		lspace := len(line) > 0 && unicode.IsSpace(rune(line[0]))
 
 		var comment []byte
 		if n := bytes.IndexByte(line, '/'); n != -1 && n+1 < len(line) && (line[n+1] == '/' || line[n+1] == '*') {
 			comment = bytes.TrimRightFunc(line[n:], unicode.IsSpace)
 			line = line[:n]
+			if comment[1] == '/' && len(bytes.TrimSpace(line)) == 0 {
+				if len(line) != 0 {
+					writeTab(w)
+				}
+				writeEsc(w)
+				w.Write(comment)
+				writeEsc(w)
+				writeLF(w)
+				continue
+			}
 		}
 
 		fields := bytes.Fields(line)
@@ -63,9 +77,11 @@ func formatAsm(in []byte) ([]byte, error) {
 
 				writeTab(w)
 				w.WriteString(f)
-				writeTab(w)
 
 				for i, f := range fields {
+					if i == 0 {
+						writeTab(w)
+					}
 					if f[0] == ',' {
 						w.WriteByte(',')
 						writeSpc(w)
