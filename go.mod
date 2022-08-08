@@ -1,8 +1,10 @@
 module github.com/ziutek/agf
 
-go 1.13
+go 1.18
 
 require (
-	9fans.net/go v0.0.2
-	golang.org/x/tools v0.0.0-20191014205221-18e3458ac98b
+	9fans.net/go v0.0.4 // indirect
+	golang.org/x/mod v0.6.0-dev.0.20220419223038-86c51ed26bb4 // indirect
+	golang.org/x/sys v0.0.0-20220722155257-8c9f86f7a55f // indirect
+	golang.org/x/tools v0.1.12 // indirect
 )
